@@ -35,6 +35,12 @@ exports.insertNewUser = async function (user) {
 exports.getUserById = async function (id) {
   const db = getDBReference();
   const collection = db.collection('users');
-  const results = await collection.find({ _id: new ObjectId(id) }).toArray();
-  return results[0];
-}
+  if (!ObjectId.isValid(id)) {
+    return null;
+  } else {
+    const results = await collection
+      .find({ _id: new ObjectId(id) })
+      .toArray();
+    return results[0];
+  }
+};
