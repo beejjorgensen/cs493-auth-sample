@@ -38,15 +38,3 @@ exports.getUserById = async function (id) {
   const results = await collection.find({ _id: new ObjectId(id) }).toArray();
   return results[0];
 }
-
-
-/*
- * Fetch a user from the DB based on user email.  Assumes email is unique among
- * stored users.
- */
-exports.getUserByEmail = async function (email) {
-  const db = getDBReference();
-  const collection = db.collection('users');
-  const results = await collection.find({ email: email }).toArray();
-  return results[0];
-}
