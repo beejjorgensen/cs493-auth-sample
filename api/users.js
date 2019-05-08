@@ -5,7 +5,8 @@
 const router = require('express').Router();
 
 const { validateAgainstSchema } = require('../lib/validation');
-const { UserSchema, insertNewUser, getUserById } = require('../models/user');
+const { generateAuthToken } = require('../lib/auth');
+const { UserSchema, insertNewUser, getUserById, validateUser } = require('../models/user');
 
 router.post('/', async (req, res) => {
   if (validateAgainstSchema(req.body, UserSchema)) {
@@ -23,6 +24,32 @@ router.post('/', async (req, res) => {
   } else {
     res.status(400).send({
       error: "Request body does not contain a valid User."
+    });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  if (req.body && req.body.id && req.body.password) {
+    try {
+      const authenticated = await validateUser(req.body.id, req.body.password);
+      if (authenticated) {
+        const token = generateAuthToken(req.body.id);
+        res.status(200).send({
+          token: token
+        });
+      } else {
+        res.status(401).send({
+          error: "Invalid credentials"
+        });
+      }
+    } catch (err) {
+      res.status(500).send({
+        error: "Error validating user.  Try again later."
+      });
+    }
+  } else {
+    res.status(400).send({
+      error: "Request body was invalid"
     });
   }
 });
