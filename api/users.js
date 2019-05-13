@@ -5,7 +5,7 @@
 const router = require('express').Router();
 
 const { validateAgainstSchema } = require('../lib/validation');
-const { generateAuthToken } = require('../lib/auth');
+const { generateAuthToken, requireAuthentication } = require('../lib/auth');
 const { UserSchema, insertNewUser, getUserById, validateUser } = require('../models/user');
 
 router.post('/', async (req, res) => {
@@ -54,18 +54,24 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const user = await getUserById(req.params.id);
-    if (user) {
-      res.status(200).send(user);
-    } else {
-      next();
+router.get('/:id', requireAuthentication, async (req, res, next) => {
+  if (req.params.id === req.user) {
+    try {
+      const user = await getUserById(req.params.id);
+      if (user) {
+        res.status(200).send(user);
+      } else {
+        next();
+      }
+    } catch (err) {
+      console.error("  -- Error:", err);
+      res.status(500).send({
+        error: "Error fetching user.  Try again later."
+      });
     }
-  } catch (err) {
-    console.error("  -- Error:", err);
-    res.status(500).send({
-      error: "Error fetching user.  Try again later."
+  } else {
+    res.status(403).send({
+      error: "Unauthorized to access the specified resource"
     });
   }
 });
